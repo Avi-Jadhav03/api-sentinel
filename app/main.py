@@ -3,6 +3,7 @@ from app.models.model import API
 from contextlib import asynccontextmanager
 from app.db.database import engine, Base
 
+from app.routers.api_router import router as api_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -21,3 +22,5 @@ app = FastAPI(lifespan=lifespan)
 @app.get("/")
 async def root():
     return {"message": "API Sentinel is running 🚀"}
+
+app.include_router(api_router)
