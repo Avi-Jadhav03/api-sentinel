@@ -1,9 +1,11 @@
 from fastapi import FastAPI
-from app.models.model import API
+from app.models.api_model import API
+from app.models.health_log_model import HealthLog
 from contextlib import asynccontextmanager
 from app.db.database import engine, Base
 
 from app.routers.api_router import router as api_router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):

@@ -2,7 +2,7 @@ from sqlalchemy import Integer, DateTime, String
 from sqlalchemy.orm import Mapped, mapped_column
 from app.db.database import Base
 from datetime import datetime, timezone
-
+from sqlalchemy.orm import relationship
 
 class API(Base):
     __tablename__ = "apis"
@@ -14,3 +14,5 @@ class API(Base):
         DateTime(timezone=True),
         default=lambda: datetime.now(timezone.utc)
     )
+    
+    logs = relationship("HealthLog", back_populates="api", cascade="all, delete")
