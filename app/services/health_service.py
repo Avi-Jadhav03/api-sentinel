@@ -97,14 +97,34 @@ async def get_api_stats(api_id: int):
         )
         avg_response_time = avg_result.scalar()
 
+        latest_result = await db.execute(
+            select(HealthLog)
+            .where(HealthLog.api_id == api_id)
+            .order_by(HealthLog.checked_at.desc())
+            .limit(1)
+        )
+        latest_log = latest_result.scalar_one_or_none()
+
+        if latest_log:
+            last_status = "UP" if latest_log.is_healthy else "DOWN"
+            last_checked_at = latest_log.checked_at
+        else:
+            last_status = None
+            last_checked_at = None
+
         if total_checks == 0:
             uptime = 0
         else:
             uptime = (healthy_checks / total_checks) * 100
 
+        failure_rate = 0 if total_checks == 0 else round(100 - ((healthy_checks / total_checks) * 100), 2)
+
         return {
             "total_checks": total_checks,
             "healthy_checks": healthy_checks,
             "uptime_percentage": round(uptime, 2),
-            "avg_response_time": avg_response_time
+            "failure_rate": failure_rate,
+            "avg_response_time": avg_response_time,
+            "last_status": last_status,
+            "last_checked_at": last_checked_at
         }
