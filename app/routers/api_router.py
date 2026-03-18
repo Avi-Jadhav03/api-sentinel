@@ -36,54 +36,23 @@ async def get_api_by_id(id:int ,db:AsyncSession = Depends(get_db)):
     
     return api
 
-from app.models.health_log_model import HealthLog
 
+from app.models.health_log_model import HealthLog
+from app.services.health_service import check_single_api
 
 @router.post("/{id}/check")
-async def check_health_by_id(id: int, db: AsyncSession = Depends(get_db)):
-    result = await db.execute(select(API).where(API.id == id))
-    api = result.scalar_one_or_none()
+async def check_health_by_id(id: int):
+    result = await check_single_api(id)
 
-    if api is None:
+    if result is None:
         raise HTTPException(status_code=404, detail="API not found")
 
-    try:
-        start = time.perf_counter()
+    return result
 
-        async with httpx.AsyncClient(timeout=5.0) as client:
-            response = await client.get(api.url)
-
-        end = time.perf_counter()
-        response_time = end - start
-
-        log = HealthLog(
-            api_id=api.id,
-            status_code=response.status_code,
-            response_time=response_time,
-            is_healthy=response.status_code == 200
-        )
-
-    except httpx.RequestError as e:
-        log = HealthLog(
-            api_id=api.id,
-            status_code=None,
-            response_time=None,
-            is_healthy=False
-        )
-
-    db.add(log)
-    await db.commit()
-
-    return {
-        "status_code": log.status_code,
-        "response_time": log.response_time,
-        "is_healthy": log.is_healthy
-    }
 
 from app.models.health_log_model import HealthLog
 from app.schemas.schema import HealthLogResponse
 from sqlalchemy import select, desc
-
 
 @router.get("/{id}/logs", response_model=list[HealthLogResponse])
 async def get_api_logs(id: int, db: AsyncSession = Depends(get_db)):

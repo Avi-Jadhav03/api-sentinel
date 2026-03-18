@@ -5,6 +5,8 @@ from contextlib import asynccontextmanager
 from app.db.database import engine, Base
 
 from app.routers.api_router import router as api_router
+from app.services.health_service import background_monitor
+import asyncio
 
 
 @asynccontextmanager
@@ -13,6 +15,7 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
+    asyncio.create_task(background_monitor())
     yield  # Application runs here
 
     # Shutdown logic (we'll use later if needed)
