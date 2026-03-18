@@ -74,3 +74,10 @@ async def get_api_logs(id: int, db: AsyncSession = Depends(get_db)):
     logs = logs_result.scalars().all()
 
     return logs
+
+
+from app.services.health_service import get_api_stats
+
+@router.get("/{id}/stats")
+async def get_stats(id: int):
+    return await get_api_stats(id)
