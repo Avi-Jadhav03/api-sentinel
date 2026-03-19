@@ -128,3 +128,54 @@ async def get_api_stats(api_id: int):
             "last_status": last_status,
             "last_checked_at": last_checked_at
         }
+    
+
+async def hit_api_once(url: str):
+    try:
+        start = time.perf_counter()
+
+        async with httpx.AsyncClient(timeout=5.0) as client:
+            response = await client.get(url)
+
+        end = time.perf_counter()
+
+        return {
+            "success": response.status_code == 200,
+            "response_time": end - start
+        }
+
+    except httpx.RequestError:
+        return {
+            "success": False,
+            "response_time": None
+        }
+    
+async def load_test_api(api_id: int, num_requests: int = 20):
+    async with AsyncSessionLocal() as db:
+        result = await db.execute(select(API).where(API.id == api_id))
+        api = result.scalar_one_or_none()
+
+        if api is None:
+            return None
+
+        tasks = [
+            hit_api_once(api.url)
+            for _ in range(num_requests)
+        ]
+
+        results = await asyncio.gather(*tasks)
+
+        total = len(results)
+        success = sum(1 for r in results if r["success"])
+        failure = total - success
+
+        valid_times = [r["response_time"] for r in results if r["response_time"] is not None]
+
+        avg_time = sum(valid_times) / len(valid_times) if valid_times else 0
+
+        return {
+            "total_requests": total,
+            "successful_requests": success,
+            "failed_requests": failure,
+            "avg_response_time": round(avg_time, 4)
+        }

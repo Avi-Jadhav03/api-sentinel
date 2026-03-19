@@ -81,3 +81,13 @@ from app.services.health_service import get_api_stats
 @router.get("/{id}/stats")
 async def get_stats(id: int):
     return await get_api_stats(id)
+
+from app.services.health_service import load_test_api
+@router.post("/{id}/load-test")
+async def load_test(id: int):
+    result = await load_test_api(id)
+
+    if result is None:
+        raise HTTPException(status_code=404, detail="API not found")
+
+    return result
