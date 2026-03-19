@@ -169,13 +169,27 @@ async def load_test_api(api_id: int, num_requests: int = 20):
         success = sum(1 for r in results if r["success"])
         failure = total - success
 
-        valid_times = [r["response_time"] for r in results if r["response_time"] is not None]
+        success_rate = (success / total) * 100 if total > 0 else 0
 
-        avg_time = sum(valid_times) / len(valid_times) if valid_times else 0
+        valid_times = [
+            r["response_time"]
+            for r in results
+            if r["response_time"] is not None
+        ]
+
+        if valid_times:
+            avg_time = sum(valid_times) / len(valid_times)
+            min_time = min(valid_times)
+            max_time = max(valid_times)
+        else:
+            avg_time = min_time = max_time = 0
 
         return {
             "total_requests": total,
             "successful_requests": success,
             "failed_requests": failure,
-            "avg_response_time": round(avg_time, 4)
+            "success_rate": round(success_rate, 2),
+            "avg_response_time": round(avg_time, 4),
+            "min_response_time": round(min_time, 4),
+            "max_response_time": round(max_time, 4)
         }
