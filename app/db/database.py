@@ -1,7 +1,7 @@
 from sqlalchemy.ext.asyncio import AsyncSession,create_async_engine
 from sqlalchemy.orm import sessionmaker,DeclarativeBase
 
-DATABASE_URL = "sqlite+aiosqlite:///./api_sentinel.db"
+DATABASE_URL = "postgresql+asyncpg://avi@localhost:5432/api_monitor"
 
 engine = create_async_engine(
     url=DATABASE_URL,
