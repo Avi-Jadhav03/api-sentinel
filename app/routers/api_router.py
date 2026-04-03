@@ -1,10 +1,12 @@
-from fastapi import APIRouter, Depends,HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import select, desc
 from app.db.database import get_db
 from app.models.api_model import API
-from app.schemas.schema import APICreate, APIResponse
-import httpx,time
+from app.models.health_log_model import HealthLog
+from app.schemas.schema import APICreate, APIResponse, HealthLogResponse
+from app.services.health_service import check_single_api, get_api_stats, load_test_api
+from app.services.ai_service import ai_query
 
 router = APIRouter(prefix="/apis", tags=["APIs"])
 
@@ -37,9 +39,6 @@ async def get_api_by_id(id:int ,db:AsyncSession = Depends(get_db)):
     return api
 
 
-from app.models.health_log_model import HealthLog
-from app.services.health_service import check_single_api
-
 @router.post("/{id}/check")
 async def check_health_by_id(id: int):
     result = await check_single_api(id)
@@ -49,10 +48,6 @@ async def check_health_by_id(id: int):
 
     return result
 
-
-from app.models.health_log_model import HealthLog
-from app.schemas.schema import HealthLogResponse
-from sqlalchemy import select, desc
 
 @router.get("/{id}/logs", response_model=list[HealthLogResponse])
 async def get_api_logs(id: int, db: AsyncSession = Depends(get_db)):
@@ -76,13 +71,11 @@ async def get_api_logs(id: int, db: AsyncSession = Depends(get_db)):
     return logs
 
 
-from app.services.health_service import get_api_stats
-
 @router.get("/{id}/stats")
 async def get_stats(id: int):
     return await get_api_stats(id)
 
-from app.services.health_service import load_test_api
+
 @router.post("/{id}/load-test")
 async def load_test(id: int, n: int = 20):
     result = await load_test_api(id, n)
@@ -91,3 +84,8 @@ async def load_test(id: int, n: int = 20):
         raise HTTPException(status_code=404, detail="API not found")
 
     return result
+
+
+@router.post("/ai/query")
+async def ask_ai(question: str = Query(...)):
+    return await ai_query(question)
