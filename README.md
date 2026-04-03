@@ -1,192 +1,201 @@
-# API Health Monitoring and Load Testing
+# 🚀 API Health Monitoring & Load Testing System
 
-## Project Overview
+## 🌍 Live Demo
 
-This backend project is built with FastAPI to help you monitor external APIs and measure their reliability and performance over time.
+https://api-sentinel-ljpg.onrender.com
 
-It allows you to:
-- Register APIs to monitor
-- Run automatic health checks in the background every 30 seconds
-- Store historical health logs (status + response time)
-- Calculate uptime and reliability statistics
-- Run concurrent load tests and view performance metrics
+---
 
-The project is designed to be beginner-friendly while using production-relevant async patterns.
+## 🧠 Project Overview
 
-## Features
+This project is a backend system built using FastAPI to monitor external APIs, track their uptime, analyze performance, and perform load testing.
 
-- Add and manage monitored APIs
+It also includes a GenAI-powered query system that allows users to ask questions in natural language and get insights from API health data.
+
+---
+
+## 🔥 Features
+
+### ✅ Core Features
+
+- Add and manage APIs
 - Automatic background monitoring every 30 seconds
-- Async API checks using AsyncIO and HTTPX
-- Health log history with response time tracking
-- API stats:
-	- Uptime percentage
-	- Failure rate
-	- Average response time
-	- Last known status
-- Load testing with configurable request count
-- Performance metrics:
-	- Success rate
-	- Min, max, and average response time
+- Async API health checks using AsyncIO and HTTPX
+- Store historical health logs (status + response time)
+- Uptime and reliability statistics
+- Load testing with concurrent requests
 
-## Tech Stack
+### 🤖 AI-Powered Query System
+
+- Ask questions in natural language
+- Converts query → SQL using LLM (Groq + LangChain)
+- Executes SQL on database
+- Returns clean, human-readable answers
+
+#### Example Queries:
+
+- "Which APIs are down?"
+- "Which APIs are slow?"
+- "Show APIs with response time greater than 1 second"
+- "Which API failed most?"
+
+---
+
+## 🛠 Tech Stack
 
 - FastAPI
 - AsyncIO
-- SQLAlchemy (async)
-- SQLite (with `aiosqlite`)
+- SQLAlchemy (Async)
+- SQLite (aiosqlite)
 - HTTPX
+- LangChain
+- Groq (LLM)
 
-## How It Works
+---
+
+## ⚙️ How It Works
 
 ### 1. Background Monitoring
 
-When the app starts, a background task is created that:
-- Fetches all registered APIs from the database
-- Checks each API health asynchronously
-- Stores results in the health logs table
-- Sleeps for 30 seconds, then repeats
+A background task runs every 30 seconds:
 
-This provides continuous monitoring without blocking the API server.
+- Fetches all APIs
+- Checks health asynchronously
+- Stores results in database
+
+---
 
 ### 2. Async Health Checks
 
-Each API check uses:
-- `httpx.AsyncClient` for non-blocking HTTP requests
-- `time.perf_counter()` to calculate response time
-- Async database writes via SQLAlchemy async session
+- Uses `httpx.AsyncClient` for non-blocking requests
+- Measures response time using `time.perf_counter()`
+- Runs concurrent checks using `asyncio.gather()`
 
-Checks are executed concurrently using `asyncio.gather(...)` for efficiency.
+---
 
 ### 3. Load Testing
 
-Load testing sends multiple concurrent requests to a selected API endpoint and returns summary metrics including success rate and timing stats.
+- Sends multiple concurrent requests to an API
+- Calculates performance metrics:
+  - Success rate
+  - Avg, min, max response time
 
-## Architecture
+---
 
-### High-Level Components
+### 4. AI Query Pipeline
 
-- FastAPI app and routers handle incoming requests.
-- Background monitor runs every 30 seconds using AsyncIO.
-- Health service performs async HTTP checks using HTTPX.
-- SQLAlchemy async layer stores APIs and health logs in SQLite.
+```text
+User Question
+   ↓
+LLM (LangChain + Groq)
+   ↓
+Generate SQL
+   ↓
+Execute SQL (SQLite)
+   ↓
+LLM converts result → human answer
+```
 
-### Request and Monitoring Flow
+---
+
+## 🏗 Architecture
 
 ```mermaid
 flowchart TD
-	A[Client] --> B[FastAPI Routes]
-	B --> C[Health Service]
-	C --> D[(SQLite via SQLAlchemy Async)]
-	C --> E[Target APIs via HTTPX]
+    A[Client] --> B[FastAPI]
+    B --> C[Health Service]
+    C --> D[(Database)]
+    C --> E[External APIs]
 
-	F[Background Monitor every 30s] --> C
+    F[Background Monitor] --> C
+    G[AI Query] --> H[LLM]
+    H --> D
 ```
 
-## Setup and Run
+---
 
-### Prerequisites
-
-- Python 3.10+
+## 🚀 Setup & Run
 
 ### Installation
 
-1. Clone the repository and move into the project folder.
-2. Create a virtual environment:
-
 ```bash
-python -m venv .venv
-```
+# clone repo
+git clone <your-repo-url>
+cd api-sentinel
 
-3. Activate the virtual environment:
+# create venv
+python -m venv venv
+source venv/bin/activate
 
-```bash
-source .venv/bin/activate
-```
-
-4. Install dependencies:
-
-```bash
+# install deps
 pip install -r requirements.txt
 ```
 
-### Run the Server
+### Run Server
 
 ```bash
 uvicorn app.main:app --reload
 ```
 
-API will be available at:
-- `http://127.0.0.1:8000`
+Docs:
 
-Interactive docs:
-- Swagger UI: `http://127.0.0.1:8000/docs`
-- ReDoc: `http://127.0.0.1:8000/redoc`
+- http://127.0.0.1:8000/docs
 
-## API Endpoints
+---
 
-### Root
-
-- `GET /` - Service health message
+## 📡 API Endpoints
 
 ### API Management
 
-- `POST /apis/` - Add a new API
-- `GET /apis/` - List all APIs
-- `GET /apis/{id}` - Get API by ID
+- `POST /apis/`
+- `GET /apis/`
+- `GET /apis/{id}`
 
-### Monitoring and Logs
+### Monitoring
 
-- `POST /apis/{id}/check` - Run an immediate health check for one API
-- `GET /apis/{id}/logs` - Fetch health check logs (latest first)
-- `GET /apis/{id}/stats` - Get aggregated uptime and reliability stats
+- `POST /apis/{id}/check`
+- `GET /apis/{id}/logs`
+- `GET /apis/{id}/stats`
 
 ### Load Testing
 
-- `POST /apis/{id}/load-test?n=20` - Run load test with `n` concurrent requests
+- `POST /apis/{id}/load-test?n=50`
 
-## Example Response JSON
+### 🤖 AI Query
 
-### Health Check (`POST /apis/{id}/check`)
+- `POST /apis/ai/query?question=...`
 
-```json
-{
-	"status_code": 200,
-	"response_time": 0.1432,
-	"is_healthy": true
-}
-```
+---
 
-### Stats (`GET /apis/{id}/stats`)
+## 📊 Example Output
 
 ```json
 {
-	"total_checks": 120,
-	"healthy_checks": 114,
-	"uptime_percentage": 95.0,
-	"failure_rate": 5.0,
-	"avg_response_time": 0.1824,
-	"last_status": "UP",
-	"last_checked_at": "2026-03-19T09:30:12.145000"
+  "answer": "Instagram and Google APIs had response time greater than 1 second."
 }
 ```
 
-### Load Test (`POST /apis/{id}/load-test?n=50`)
+---
 
-```json
-{
-	"total_requests": 50,
-	"successful_requests": 48,
-	"failed_requests": 2,
-	"success_rate": 96.0,
-	"avg_response_time": 0.2103,
-	"min_response_time": 0.0891,
-	"max_response_time": 0.5844
-}
-```
+## ⚠️ Notes
 
-## Notes
+- SQLite is used → data may reset on deployment restart
+- Free Render tier may sleep → first request can be slow
+- AI responses depend on LLM accuracy
 
-- Health checks currently mark an API as healthy when HTTP status is `200`.
-- Timeout for checks is set to 5 seconds.
-- SQLite database and tables are initialized automatically on startup.
+---
+
+## 📚 What I Learned
+
+- Async programming with FastAPI
+- Background task scheduling
+- Concurrency with asyncio.gather
+- API performance monitoring
+- GenAI integration (NL → SQL → Answer)
+- Handling LLM outputs and validation
+
+---
+
+## 👨‍💻 Author
+
+Avishkar Jadhav
