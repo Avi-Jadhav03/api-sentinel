@@ -29,6 +29,19 @@ async def get_apis(db:AsyncSession = Depends(get_db)):
     apis = result.scalars().all()
     return apis
 
+@router.delete('/{id}')
+async def delete_api_by_id(id:int ,db:AsyncSession = Depends(get_db)):
+    result =await db.execute(select(API).where(API.id == id))
+    api = result.scalars().first()
+    if api is None:
+        raise HTTPException(status_code=404, detail="API not found")
+    
+    await db.delete(api)
+    await db.commit()
+
+    return api
+    
+
 @router.get('/{id}',response_model = APIResponse)
 async def get_api_by_id(id:int ,db:AsyncSession = Depends(get_db)):
     result = await db.execute(select(API).where(API.id == id))
