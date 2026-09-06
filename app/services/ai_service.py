@@ -9,7 +9,7 @@ load_dotenv()
 # Initialize LLM
 llm = ChatGroq(
     groq_api_key=os.getenv("GROQ_API_KEY"),
-    model="llama-3.3-70b-versatile",
+    model="openai/gpt-oss-120b",
     temperature=0
 )
 
@@ -38,9 +38,13 @@ Table: health_logs(id, api_id, status_code, response_time, is_healthy, checked_a
 
 Rules:
 - Only generate SELECT queries
-- Use SQLite syntax
+- Use PostgreSQL-compatible syntax
+- is_healthy is BOOLEAN, use TRUE/FALSE
+- Always use JOIN with apis table
+- If using aggregate functions, include GROUP BY for non-aggregated columns
+- API names are stored in lowercase (e.g., 'google', 'instagram')
 - No explanation, only SQL
-- Always use JOIN with apis table to get API name instead of api_id
+
 
 User Question:
 {question}
